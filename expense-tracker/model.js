@@ -1,32 +1,35 @@
 const mongoose = require("mongoose");
 const {Schema} = mongoose;
+const dotenv = require('dotenv');
+
+dotenv.config() // Import environmental variables
 
 mongoose.set('strictQuery', false);
-mongoose.connect('key_goes_here');
+mongoose.connect(process.env.DB_PASSWORD);
 
 
-const ExpenseSchema = Schema({
+const JournalEntrySchema = Schema({
     description: {
         type: String,
-        required: [true, "Expense must have a description."]
+        required: [true, "Journal entry must have a description."]
     },
 
     amount: {
         type: Number,
-        required: [true, "Expense must have a value"]
+        required: [true, "Journal entry must have a value."]
     },
 
-    catagory: {
+    category: {
         type: String,
-        required: [true, "Expense must have a category"]
+        required: [true, "Journal entry must have a category."]
     }
 },
 { timestamps: true }
 );
 
-const Expense = mongoose.model("Expense", ExpenseSchema);
+const JournalEntry = mongoose.model("JournalEntry", JournalEntrySchema);
 
 
 module.exports = {
-    Expense: Expense
+    JournalEntry: JournalEntry
 }
