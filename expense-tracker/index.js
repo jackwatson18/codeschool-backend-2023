@@ -17,6 +17,21 @@ app.get("/expenses", function(req, res) {
     });
 });
 
+app.get("/expenses/:expenseID", function(req, res) {
+    model.JournalEntry.findOne({ "_id": req.params.expenseID }).then(expense => {
+        if (expense) {
+            res.json(expense);
+        }
+        else {
+            console.log("Expense not found.")
+            res.status(404).send("Expense not found.");
+        }
+    }).catch(() => {
+        console.log("Bad request (GET by ID).");
+        res.status(400).send("Expense not found.");
+    })
+});
+
 // POST
 
 app.post("/expenses", function(req, res) {
@@ -41,7 +56,39 @@ app.post("/expenses", function(req, res) {
 
 // PUT
 
+app.put("/expenses/:expenseID", function (req, res) {
+    const updatedExpense = {
+        description: req.body.description,
+        amount: req.body.amount,
+        category: req.body.category
+    }
+
+    model.JournalEntry.findByIdAndUpdate({ "_id": req.params.expenseID }, updatedExpense, {"new":true}).then(expense => {
+        if (expense) {
+            res.status(204).send("Expense updated.");
+        }
+        else {
+            res.status(404).send("Expense not found.");
+        }
+    }).catch(() => {
+        res.status(422).send("Unable to update.");
+    });
+});
+
 // DELETE
+
+app.delete("/expenses/:expenseID", function (req, res) {
+    model.JournalEntry.findOneAndDelete({ "_id": req.params.expenseID }).then(expense => {
+        if (expense) {
+            res.status(204).send("Expense Deleted.");
+        }
+        else {
+            res.status(404).send("Expense not found.");
+        }
+    }).catch(() => {
+        res.status(422).send("Unable to delete.");
+    });
+});
 
 app.listen(port, function() {
     console.log(`Running server on port ${port}...`);
