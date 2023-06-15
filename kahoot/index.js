@@ -5,8 +5,48 @@ const model = require('./model');
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 app.use(cors());
+
+// VALIDATOR FUNCTIONS
+
+function validateQuiz(data) {
+    let errors = [];
+
+    if (!data.title) {
+        errors.push("Quiz must have a title.");
+    }
+
+    return errors;
+}
+
+function validateQuestion(data) {
+    let errors = [];
+    
+    if (!data.questionText) {
+        errors.push("Question must contain text.");
+    }
+    
+    let optionTextBlank = false;
+    let isCorrectBlank = false;
+    data.possibleChoices.forEach(function(choice) {
+        if (!choice.answerText) {
+            optionTextBlank = true;
+        }
+        if (choice.isCorrect === undefined || choice.isCorrect === null) {
+            isCorrectBlank = true;
+        }
+    });
+
+    if (optionTextBlank) {
+        errors.push("One or more answer options does not contain text.");
+    }
+    if (isCorrectBlank) {
+        errors.push("One or more anwer options is not assigned a boolean value for correct/incorrect.");
+    }
+
+    return errors;
+}
 
 // GET
 
@@ -20,7 +60,7 @@ app.get("/quizes/:quizID", function(req, res) {
     model.Quiz.findOne( { "_id": req.params.quizID }).populate("questions").then(quiz => {
         if (quiz) {
             console.log(quiz);
-            res.json(expense);
+            res.json(quiz);
         }
         else {
             console.log("Quiz not found.");
@@ -69,7 +109,7 @@ app.post("/quizes", function(req, res) {
         res.status(201).send("Created quiz.");
     }).catch((errors) => {
         let error_list = [];
-        for (var key in error.errors) {
+        for (var key in errors.errors) {
             error_list.push(errors.errors[key].message);
         }
         res.status(422).send(error_list);
@@ -98,42 +138,61 @@ app.post("/questions", function(req,res) {
 // PUT
 
 app.put("/quizes/:quizID", function(req,res) {
-    const updatedQuiz = {
-        title: req.body.title,
-        questions: req.body.questions
+
+    let validatorErrors = validateQuiz(req.body);
+    if (validatorErrors.length > 0) {
+        console.log("Errors updating quiz!:", validatorErrors);
+        res.status(422).send(validatorErrors);
     }
 
-    model.Quiz.findByIdAndUpdate({ "_id": req.params.quizID }, updatedQuiz, {"new":true}).then(quiz => {
-        if (quiz) {
-            res.status(204).send("Quiz updated.");
+    else {
+        const updatedQuiz = {
+            title: req.body.title,
+            questions: req.body.questions
         }
-        else {
-            res.status(404).send("Quiz not found.");
-        }
-    }).catch((errors) => {
-        console.log(errors);
-        res.status(422).send("Unable to update quiz.");
-    });
+    
+        model.Quiz.findByIdAndUpdate({ "_id": req.params.quizID }, updatedQuiz, {"new":true}).then(quiz => {
+            if (quiz) {
+                res.status(204).send("Quiz updated.");
+            }
+            else {
+                res.status(404).send("Quiz not found.");
+            }
+        }).catch((errors) => {
+            console.log(errors);
+            res.status(422).send("Unable to update quiz.");
+        });
+    }
 });
 
 app.put("/questions/:questionID", function(req, res) {
-    const updatedQuestion = {
-        questionText: req.body.questionText,
-        possibleChoices: req.body.possibleChoices
-    }
 
-    model.Question.findByIdAndUpdate({ "_id": req.params.questionID }, updatedQuestion, {"new":true}).then(question => {
-        if (question) {
-            res.status(204).send("Question updated.");
+    let validatorErrors = validateQuestion(req.body);
+
+    if (validatorErrors.length > 0) {
+        console.log("Errors updating question!:", validatorErrors);
+        res.status(422).send(validatorErrors);
+    }
+    else {
+        const updatedQuestion = {
+            questionText: req.body.questionText,
+            possibleChoices: req.body.possibleChoices
         }
-        else {
-            res.status(404).send("Question not found.");
-        }
-    }).catch((errors) => {
-        console.log(errors);
-        res.status(422).send("Unable to update question.");
-    });
-}); // TODO: Fix valdiation on updates.
+    
+        model.Question.findByIdAndUpdate({ "_id": req.params.questionID }, updatedQuestion, {"new":true}).then(question => {
+            if (question) {
+                res.status(204).send("Question updated.");
+            }
+            else {
+                res.status(404).send("Question not found.");
+            }
+        }).catch((errors) => {
+            console.log(errors);
+            res.status(422).send("Unable to update question.");
+        });
+    }
+    
+}); 
 
 // DELETE
 app.delete("/quizes/:quizID", function(req, res) {

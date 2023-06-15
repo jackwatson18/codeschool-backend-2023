@@ -9,7 +9,6 @@ mongoose.connect(process.env.DB_PASSWORD);
 
 
 
-
 const QuestionSchema = Schema({
     questionText: {
         type: String,
