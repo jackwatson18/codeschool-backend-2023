@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const model = require('./model');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -12,7 +15,7 @@ app.use(cors());
 
 function validateQuiz(data) {
     let errors = [];
-
+    console.log("Title is:", data.title)
     if (!data.title) {
         errors.push("Quiz must have a title.");
     }
@@ -220,6 +223,21 @@ app.delete("/questions/:questionID", function(req, res) {
         res.status(422).send("Unable to delete question.");
     });
 });
+
+// function testAddQuestionToQuiz() {
+//     model.Quiz.findOne().populate().then((quiz) => {
+//         model.Question.findOne().then((question) => {
+//             quiz.questions.push(question);
+//             quiz.save();
+//         })
+// })
+// }
+
+// // app.post("/test-put", function(req, res) {
+// //     // STRICTLY FOR TESTING. Mongoose really hates strings.
+// //     testAddQuestionToQuiz();
+// //     res.send("Test done");
+// // })
 
 
 app.listen(port, function() {
