@@ -32,14 +32,15 @@ const QuizSchema = Schema({
         required: [true, "Quiz must have a title."]
     },
     description: String,
-    questions: [QuestionSchema]
+    questions: [{type: Schema.Types.ObjectId, ref: "Question"}]
 
 },
 {timestamps: true}
 );
 
-const Quiz = mongoose.model("Quiz", QuizSchema);
 const Question = mongoose.model("Question", QuestionSchema);
+const Quiz = mongoose.model("Quiz", QuizSchema);
+
 
 module.exports = {
     Quiz: Quiz,

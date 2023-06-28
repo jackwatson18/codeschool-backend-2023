@@ -107,6 +107,8 @@ app.post("/quizes", function(req, res) {
         questions: req.body.questions
     });
 
+    console.log(newQuiz);
+
     newQuiz.save().then(() => {
         console.log("New quiz added.");
         res.status(201).send("Created quiz.");
@@ -141,60 +143,52 @@ app.post("/questions", function(req,res) {
 // PUT
 
 app.put("/quizes/:quizID", function(req,res) {
+    model.Quiz.findOne({ "_id":req.params.quizID }).then(quiz => {
+        if (quiz) {
+            quiz.title = req.body.title;
+            quiz.description = req.body.description;
+            quiz.questions = req.body.questions;
 
-    let validatorErrors = validateQuiz(req.body);
-    if (validatorErrors.length > 0) {
-        console.log("Errors updating quiz!:", validatorErrors);
-        res.status(422).send(validatorErrors);
-    }
-
-    else {
-        const updatedQuiz = {
-            title: req.body.title,
-            questions: req.body.questions
+            quiz.save().then(() => {
+                res.status(204).send();
+            }).catch(errors => {
+                let error_list = [];
+                for (var key in errors.errors) {
+                    error_list.push(errors.errors[key].message)
+                }
+                res.status(422).send(error_list);
+            })
         }
-    
-        model.Quiz.findByIdAndUpdate({ "_id": req.params.quizID }, updatedQuiz, {"new":true}).then(quiz => {
-            if (quiz) {
-                res.status(204).send("Quiz updated.");
-            }
-            else {
-                res.status(404).send("Quiz not found.");
-            }
-        }).catch((errors) => {
-            console.log(errors);
-            res.status(422).send("Unable to update quiz.");
-        });
-    }
+        else {
+            res.status(404).send("Quiz not found.");
+        }
+    }).catch(() => {
+        res.status(400).send("Quiz not found.");
+    })
 });
 
 app.put("/questions/:questionID", function(req, res) {
+    model.Question.findOne({ "_id": req.params.questionID }).then(question => {
+        if (question) {
+            question.questionText = req.body.questionText;
+            question.possibleChoices = req.body.possibleChoices;
 
-    let validatorErrors = validateQuestion(req.body);
-
-    if (validatorErrors.length > 0) {
-        console.log("Errors updating question!:", validatorErrors);
-        res.status(422).send(validatorErrors);
-    }
-    else {
-        const updatedQuestion = {
-            questionText: req.body.questionText,
-            possibleChoices: req.body.possibleChoices
+            question.save().then(() => {
+                res.status(204).send();
+            }).catch(errors => {
+                let error_list = [];
+                for (var key in errors.errors) {
+                    error_list.push(errors.errors[key].message)
+                }
+                res.status(422).send(error_list);
+            })
         }
-    
-        model.Question.findByIdAndUpdate({ "_id": req.params.questionID }, updatedQuestion, {"new":true}).then(question => {
-            if (question) {
-                res.status(204).send("Question updated.");
-            }
-            else {
-                res.status(404).send("Question not found.");
-            }
-        }).catch((errors) => {
-            console.log(errors);
-            res.status(422).send("Unable to update question.");
-        });
-    }
-    
+        else {
+            res.status(404).send("Question not found.");
+        }
+    }).catch(() => {
+        res.status(400).send("Question not found.");
+    })
 }); 
 
 // DELETE
@@ -207,7 +201,7 @@ app.delete("/quizes/:quizID", function(req, res) {
             res.status(404).send("Quiz not found");
         }
     }).catch(() => {
-        res.status(422).send("Unable to delete question.");
+        res.status(400).send("Unable to delete question.");
     })
 });
 
@@ -220,24 +214,9 @@ app.delete("/questions/:questionID", function(req, res) {
             res.status(404).send("Question not found.");
         }
     }).catch(() => {
-        res.status(422).send("Unable to delete question.");
+        res.status(400).send("Unable to delete question.");
     });
 });
-
-// function testAddQuestionToQuiz() {
-//     model.Quiz.findOne().populate().then((quiz) => {
-//         model.Question.findOne().then((question) => {
-//             quiz.questions.push(question);
-//             quiz.save();
-//         })
-// })
-// }
-
-// // app.post("/test-put", function(req, res) {
-// //     // STRICTLY FOR TESTING. Mongoose really hates strings.
-// //     testAddQuestionToQuiz();
-// //     res.send("Test done");
-// // })
 
 
 app.listen(port, function() {
