@@ -1,3 +1,6 @@
+# Code School 2023 Backend Demos
+Backend code for 2023 Code School student projects. These are the working demos meant for the students to implement their own versions of. Expense Tracker is a simple Express backend meant to be a basic introduction to REST APIs and using MongoDB to create persistent data. The Kahoot project explores authentication for REST endpoints and how servers store authentication information. It also explores more complex data schemas for the database portion of the demo.
+
 
 # EXPENSE TRACKER
 
